@@ -15,18 +15,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate Detailed Mermaid Diagram
-        uses: builditwithgk/repo-cartographer@v1
+      # High-level
+      - uses: builditwithgk/repo-cartographer@v1
+        with:
+          path: .
+          config: .cartographer.yml
+          level: high
+          format: mermaid
+
+      # Detail
+      - uses: builditwithgk/repo-cartographer@v1
         with:
           path: .
           config: .cartographer.yml
           level: detail
           format: mermaid
 
-      - name: Generate DOT Diagram
-        uses: builditwithgk/repo-cartographer@v1
+      # DOT
+      - uses: builditwithgk/repo-cartographer@v1
         with:
           path: .
           config: .cartographer.yml
           level: detail
           format: dot
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: architecture-diagrams
+          path: |
+            architecture.html
+            architecture.mermaid
+            architecture.dot
