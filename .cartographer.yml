@@ -1,0 +1,7 @@
+rules:
+  forbidden:
+    - from: "src/app/**"
+      to: "src/prisma/**"
+      reason: "App should not access Prisma directly."
+
+  cycles: off

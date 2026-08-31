@@ -1,0 +1,22 @@
+name: Architecture Check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: builditwithgk/repo-cartographer@v1
+        with:
+          path: .
+          config: .cartographer.yml
+          level: high
