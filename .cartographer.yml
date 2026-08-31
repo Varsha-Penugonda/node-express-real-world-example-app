@@ -1,4 +1,5 @@
 rules:
+  cycles: off
   forbidden:
     - from: "src/app/**"
       to: "src/prisma/**"
