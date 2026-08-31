@@ -15,34 +15,65 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # High-level
-      - uses: builditwithgk/repo-cartographer@v1
+      - uses: actions/setup-node@v4
         with:
-          path: .
-          config: .cartographer.yml
-          level: high
-          format: mermaid
+          node-version: 22
 
-      # Detail
-      - uses: builditwithgk/repo-cartographer@v1
-        with:
-          path: .
-          config: .cartographer.yml
-          level: detail
-          format: mermaid
+      # High-level diagram
+      - name: Generate High Diagram
+        run: |
+          npx -y repo-cartographer map . --level high -o docs/high
 
-      # DOT
-      - uses: builditwithgk/repo-cartographer@v1
-        with:
-          path: .
-          config: .cartographer.yml
-          level: detail
-          format: dot
+      # Detail diagram
+      - name: Generate Detail Diagram
+        run: |
+          npx -y repo-cartographer map . --level detail -o docs/detail
 
-      - uses: actions/upload-artifact@v4
+      # Architecture check (5 errors)
+      - name: Check Rules
+        id: check
+        run: |
+          npx -y repo-cartographer check . --baseline NUL > result.txt
+        continue-on-error: true
+
+      # Post both diagrams in PR
+      - uses: actions/github-script@v7
         with:
-          name: architecture-diagrams
-          path: |
-            architecture.html
-            architecture.mermaid
-            architecture.dot
+          script: |
+            const fs = require('fs');
+
+            const high = fs.readFileSync('docs/high/architecture.mermaid','utf8');
+            const detail = fs.readFileSync('docs/detail/architecture.mermaid','utf8');
+            const result = fs.readFileSync('result.txt','utf8');
+
+            const body = `## 🗺️ Repo Cartographer Report
+
+            ### High-Level Architecture
+
+            \`\`\`mermaid
+            ${high}
+            \`\`\`
+
+            ### Detail Architecture
+
+            \`\`\`mermaid
+            ${detail}
+            \`\`\`
+
+            ### Architecture Check
+
+            \`\`\`text
+            ${result}
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Fail if violations exist
+        run: exit 1
+        if: steps.check.outcome == 'failure'
